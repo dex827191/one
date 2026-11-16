@@ -328,10 +328,11 @@ class TunnelVpnService :
                             .setMtu(
                                 VPN_MTU
                             )
-                            .addAddress(
+                                .addAddress(
                                 VPN_IPV4,
                                 VPN_PREFIX
                             )
+                            .addDisallowedApplication(packageName)
                             .addRoute(
                                 "0.0.0.0",
                                 0

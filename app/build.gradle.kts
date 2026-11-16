@@ -50,8 +50,13 @@ android {
 }
 
 dependencies {
-    // Onering Xray runtime is supplied by .github/workflows/android.yml.
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
+    // Place dharak36/xray-onering/libv2ray.aar at app/libs/libv2ray.aar.
+    // XrayCoreRunner uses reflection so SSH-only builds remain compilable without it.
+    val oneringAar = file("libs/libv2ray.aar")
+    if (oneringAar.exists()) {
+        implementation(files(oneringAar))
+    }
+
     implementation("androidx.recyclerview:recyclerview:1.4.0")
     implementation("androidx.navigation:navigation-fragment-ktx:2.8.9")
     implementation("androidx.navigation:navigation-ui-ktx:2.8.9")

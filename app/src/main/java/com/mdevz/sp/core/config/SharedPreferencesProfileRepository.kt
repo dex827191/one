@@ -29,25 +29,6 @@ class SharedPreferencesProfileRepository(
         val json =
             JSONObject().apply {
                 put("name", profile.name)
-                put("connectionType", profile.connectionType)
-                put("xrayProtocol", profile.xrayProtocol)
-                put("xrayAddress", profile.xrayAddress)
-                put("xrayPort", profile.xrayPort)
-                put("xrayUuidEncrypted", credentialCipher.encrypt(profile.xrayUuid))
-                put("xrayAlterId", profile.xrayAlterId)
-                put("xraySecurity", profile.xraySecurity)
-                put("xrayNetwork", profile.xrayNetwork)
-                put("xrayPath", profile.xrayPath)
-                put("xrayHost", profile.xrayHost)
-                put("xrayTls", profile.xrayTls)
-                put("xraySni", profile.xraySni)
-                put("xrayFlow", profile.xrayFlow)
-                put("xrayPasswordEncrypted", credentialCipher.encrypt(profile.xrayPassword))
-                put("xrayMethod", profile.xrayMethod)
-                put("xrayRawJsonEncrypted", credentialCipher.encrypt(profile.xrayRawJson))
-                put("oneringEnabled", profile.oneringEnabled)
-                put("oneringOriginDomain", profile.oneringOriginDomain)
-                put("oneringBugDomain", profile.oneringBugDomain)
                 put("sshHost", profile.sshHost)
                 put("sshPort", profile.sshPort)
                 put("username", profile.username)
@@ -152,6 +133,19 @@ class SharedPreferencesProfileRepository(
                     "maxReconnect",
                     profile.maxReconnect
                 )
+
+                put("connectionType", profile.connectionType)
+                put("xrayProtocol", profile.xrayProtocol)
+                put("xrayServer", profile.xrayServer)
+                put("xrayPort", profile.xrayPort)
+                put("xrayUuid", profile.xrayUuid)
+                put("xrayPasswordEncrypted", credentialCipher.encrypt(profile.xrayPassword))
+                put("xraySecurity", profile.xraySecurity)
+                put("xrayNetwork", profile.xrayNetwork)
+                put("xrayHost", profile.xrayHost)
+                put("xrayPath", profile.xrayPath)
+                put("xrayServerName", profile.xrayServerName)
+                put("xrayAllowInsecure", profile.xrayAllowInsecure)
             }
 
         preferences.edit()
@@ -201,26 +195,8 @@ class SharedPreferencesProfileRepository(
             }
 
         return SshProfile(
-            name = json.getString("name"),
-            connectionType = json.optString("connectionType", "SSH"),
-            xrayProtocol = json.optString("xrayProtocol", "vmess"),
-            xrayAddress = json.optString("xrayAddress", ""),
-            xrayPort = json.optInt("xrayPort", 443),
-            xrayUuid = runCatching { credentialCipher.decrypt(json.optString("xrayUuidEncrypted", "")) }.getOrDefault(""),
-            xrayAlterId = json.optInt("xrayAlterId", 0),
-            xraySecurity = json.optString("xraySecurity", "auto"),
-            xrayNetwork = json.optString("xrayNetwork", "ws"),
-            xrayPath = json.optString("xrayPath", "/"),
-            xrayHost = json.optString("xrayHost", ""),
-            xrayTls = json.optBoolean("xrayTls", true),
-            xraySni = json.optString("xraySni", ""),
-            xrayFlow = json.optString("xrayFlow", ""),
-            xrayPassword = runCatching { credentialCipher.decrypt(json.optString("xrayPasswordEncrypted", "")) }.getOrDefault(""),
-            xrayMethod = json.optString("xrayMethod", "aes-128-gcm"),
-            xrayRawJson = runCatching { credentialCipher.decrypt(json.optString("xrayRawJsonEncrypted", "")) }.getOrDefault(""),
-            oneringEnabled = json.optBoolean("oneringEnabled", false),
-            oneringOriginDomain = json.optString("oneringOriginDomain", ""),
-            oneringBugDomain = json.optString("oneringBugDomain", ""),
+            name =
+                json.getString("name"),
 
             sshHost =
                 json.getString("sshHost"),
@@ -332,7 +308,20 @@ class SharedPreferencesProfileRepository(
                 json.optInt(
                     "maxReconnect",
                     0
-                )
+                ),
+
+            connectionType = json.optString("connectionType", "SSH"),
+            xrayProtocol = json.optString("xrayProtocol", "VMess"),
+            xrayServer = json.optString("xrayServer", ""),
+            xrayPort = json.optInt("xrayPort", 443),
+            xrayUuid = json.optString("xrayUuid", ""),
+            xrayPassword = if (json.has("xrayPasswordEncrypted")) credentialCipher.decrypt(json.optString("xrayPasswordEncrypted")) else "",
+            xraySecurity = json.optString("xraySecurity", "tls"),
+            xrayNetwork = json.optString("xrayNetwork", "ws"),
+            xrayHost = json.optString("xrayHost", ""),
+            xrayPath = json.optString("xrayPath", "/"),
+            xrayServerName = json.optString("xrayServerName", ""),
+            xrayAllowInsecure = json.optBoolean("xrayAllowInsecure", false)
         )
     }
 

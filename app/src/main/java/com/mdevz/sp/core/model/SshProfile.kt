@@ -3,28 +3,6 @@ package com.mdevz.sp.core.model
 data class SshProfile(
     val name: String,
 
-    // SSH remains the default for backwards compatibility. Xray profiles are
-    // stored in the same profile library but use their own outbound settings.
-    val connectionType: String = "SSH",
-    val xrayProtocol: String = "vmess",
-    val xrayAddress: String = "",
-    val xrayPort: Int = 443,
-    val xrayUuid: String = "",
-    val xrayAlterId: Int = 0,
-    val xraySecurity: String = "auto",
-    val xrayNetwork: String = "ws",
-    val xrayPath: String = "/",
-    val xrayHost: String = "",
-    val xrayTls: Boolean = true,
-    val xraySni: String = "",
-    val xrayFlow: String = "",
-    val xrayPassword: String = "",
-    val xrayMethod: String = "aes-128-gcm",
-    val xrayRawJson: String = "",
-    val oneringEnabled: Boolean = false,
-    val oneringOriginDomain: String = "",
-    val oneringBugDomain: String = "",
-
     val sshHost: String,
     val sshPort: Int = 22,
     val username: String,
@@ -52,5 +30,19 @@ data class SshProfile(
     val readTimeoutMillis: Int = 0,
 
     val autoReconnect: Boolean = true,
-    val maxReconnect: Int = 0
+    val maxReconnect: Int = 0,
+
+    // Profile transport. Existing profiles default to SSH for backwards compatibility.
+    val connectionType: String = "SSH",
+    val xrayProtocol: String = "VMess",
+    val xrayServer: String = "",
+    val xrayPort: Int = 443,
+    val xrayUuid: String = "",
+    val xrayPassword: String = "",
+    val xraySecurity: String = "tls",
+    val xrayNetwork: String = "ws",
+    val xrayHost: String = "",
+    val xrayPath: String = "/",
+    val xrayServerName: String = "",
+    val xrayAllowInsecure: Boolean = false
 )

@@ -4,6 +4,18 @@ import com.mdevz.sp.core.model.PayloadMode
 import com.mdevz.sp.core.model.SshProfile
 
 data class ConnectionSnapshot(
+    val connectionType: String,
+    val xrayProtocol: String,
+    val xrayServer: String,
+    val xrayPort: Int,
+    val xrayUuid: String,
+    val xrayPassword: String,
+    val xraySecurity: String,
+    val xrayNetwork: String,
+    val xrayHost: String,
+    val xrayPath: String,
+    val xrayServerName: String,
+    val xrayAllowInsecure: Boolean,
     val sshHost: String,
     val sshPort: Int,
     val username: String,
@@ -30,6 +42,18 @@ data class ConnectionSnapshot(
             profile: SshProfile
         ): ConnectionSnapshot =
             ConnectionSnapshot(
+                connectionType = profile.connectionType,
+                xrayProtocol = profile.xrayProtocol,
+                xrayServer = profile.xrayServer,
+                xrayPort = profile.xrayPort,
+                xrayUuid = profile.xrayUuid,
+                xrayPassword = profile.xrayPassword,
+                xraySecurity = profile.xraySecurity,
+                xrayNetwork = profile.xrayNetwork,
+                xrayHost = profile.xrayHost,
+                xrayPath = profile.xrayPath,
+                xrayServerName = profile.xrayServerName,
+                xrayAllowInsecure = profile.xrayAllowInsecure,
                 sshHost = profile.sshHost,
                 sshPort = profile.sshPort,
                 username = profile.username,

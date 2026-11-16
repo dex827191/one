@@ -1,8 +1,0 @@
-{
-  "inbounds": [{"tag":"socks-in","listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"udp":true}}],
-  "outbounds": [
-    {"tag":"proxy","protocol":"vless","settings":{"vnext":[{"address":"YOUR_SERVER","port":443,"users":[{"id":"YOUR_UUID","encryption":"none","flow":""}]}]},"streamSettings":{"network":"ws","security":"tls","wsSettings":{"path":"/YOUR_PATH","headers":{"Host":"YOUR_HOST"}},"tlsSettings":{"serverName":"YOUR_SNI","allowInsecure":false}}},
-    {"tag":"direct","protocol":"freedom"}
-  ],
-  "routing":{"rules":[{"type":"field","inboundTag":["socks-in"],"outboundTag":"proxy"}]}
-}

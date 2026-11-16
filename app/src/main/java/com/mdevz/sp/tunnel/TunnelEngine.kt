@@ -40,13 +40,15 @@ private data class TunnelResources(
     val vpnController: VpnTunnelController?,
     val socksServer: Socks5Server?,
     val sshClient: TrileadSshClient?,
-    val transport: TunnelConnection?
+    val transport: TunnelConnection?,
+    val xrayRunner: XrayCoreRunner?
 )
 
 class TunnelEngine(
     private val knownHostStore: KnownHostStore,
     private val vpnProtectBridge: VpnProtectBridge,
-    private val logger: TunnelLogger
+    private val logger: TunnelLogger,
+    private val xrayRunner: XrayCoreRunner
 ) {
 
     private val lifecycleMutex = Mutex()
@@ -111,6 +113,8 @@ class TunnelEngine(
 
     private var vpnController:
         VpnTunnelController? = null
+
+    private var activeXrayRunner: XrayCoreRunner? = null
 
     private var keepAliveJob:
         Job? = null
@@ -598,6 +602,38 @@ class TunnelEngine(
             currentCoroutineContext()
                 .ensureActive()
 
+            var keepAliveFailure: CompletableDeferred<Throwable>? = null
+
+            if (snapshot.connectionType.equals("XRAY", true)) {
+                setState(TunnelState.CONNECTING_TCP)
+                logger.info("Starting Xray-Core (${snapshot.xrayProtocol})")
+                val xrayProfile = com.mdevz.sp.core.model.SshProfile(
+                    name = "Xray",
+                    sshHost = "",
+                    username = "",
+                    password = "",
+                    localSocksPort = snapshot.localSocksPort,
+                    connectionType = "XRAY",
+                    xrayProtocol = snapshot.xrayProtocol,
+                    xrayServer = snapshot.xrayServer,
+                    xrayPort = snapshot.xrayPort,
+                    xrayUuid = snapshot.xrayUuid,
+                    xrayPassword = snapshot.xrayPassword,
+                    xraySecurity = snapshot.xraySecurity,
+                    xrayNetwork = snapshot.xrayNetwork,
+                    xrayHost = snapshot.xrayHost,
+                    xrayPath = snapshot.xrayPath,
+                    xrayServerName = snapshot.xrayServerName,
+                    xrayAllowInsecure = snapshot.xrayAllowInsecure
+                )
+                xrayRunner.start(xrayProfile)
+                withContext(NonCancellable) {
+                    lifecycleMutex.withLock { activeXrayRunner = xrayRunner }
+                }
+                currentCoroutineContext().ensureActive()
+                setState(TunnelState.STARTING_SOCKS)
+                logger.info("Xray SOCKS inbound started on 127.0.0.1:${snapshot.localSocksPort}")
+            } else {
             val currentTransport =
                 ConnectionPipelineBuilder.build(
                     snapshot = snapshot,
@@ -767,12 +803,15 @@ class TunnelEngine(
                 socksServer = server
             }
 
-            val keepAliveFailure =
+            keepAliveFailure =
                 startKeepAlive(
                     client = client,
                     seconds =
                         snapshot.keepAliveSeconds
                 )
+
+
+            }
 
             setState(
                 TunnelState.STARTING_VPN
@@ -851,7 +890,11 @@ class TunnelEngine(
                     )
                 }
 
-                if (!server.isRunning) {
+                if (snapshot.connectionType.equals("XRAY", true)) {
+                    if (!xrayRunner.isRunning()) {
+                        throw TunnelRuntimeLostException("Xray-Core stopped while connected")
+                    }
+                } else if (socksServer?.isRunning != true) {
                     throw TunnelRuntimeLostException(
                         "Local SOCKS5 server stopped while connected"
                     )
@@ -1086,13 +1129,16 @@ class TunnelEngine(
                 sshClient =
                     sshClient,
                 transport =
-                    transport
+                    transport,
+                xrayRunner =
+                    activeXrayRunner
             )
 
         vpnController = null
         socksServer = null
         sshClient = null
         transport = null
+        activeXrayRunner = null
 
         return resources
     }
@@ -1156,6 +1202,14 @@ class TunnelEngine(
                         )
                     }
                 }
+
+            resources.xrayRunner?.let {
+                try {
+                    it.stop()
+                } catch (failure: Throwable) {
+                    recordFailure("Xray-Core teardown failed", failure)
+                }
+            }
 
             resources.vpnController
                 ?.let {

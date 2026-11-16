@@ -5,6 +5,7 @@ import com.mdevz.sp.core.config.SharedPreferencesProfileRepository
 import com.mdevz.sp.ssh.SharedPreferencesKnownHostStore
 import com.mdevz.sp.tunnel.MemoryTunnelLogger
 import com.mdevz.sp.tunnel.TunnelEngine
+import com.mdevz.sp.tunnel.XrayCoreRunner
 import com.mdevz.sp.vpn.VpnProtectBridge
 
 class TunnelRuntime private constructor(
@@ -30,12 +31,15 @@ class TunnelRuntime private constructor(
     val vpnProtectBridge =
         VpnProtectBridge()
 
+    val xrayRunner = XrayCoreRunner(appContext)
+
     val engine =
         TunnelEngine(
             knownHostStore = knownHosts,
             vpnProtectBridge =
                 vpnProtectBridge,
-            logger = logger
+            logger = logger,
+            xrayRunner = xrayRunner
         )
 
     companion object {

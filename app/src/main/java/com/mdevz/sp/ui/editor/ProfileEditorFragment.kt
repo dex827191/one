@@ -206,8 +206,41 @@ class ProfileEditorFragment : Fragment() {
             profile.maxReconnect.toString()
         )
 
+        binding.inputXrayName.setText(profile.name)
+        binding.inputXrayProtocol.setText(profile.xrayProtocol, false)
+        binding.inputXrayServer.setText(profile.xrayServer)
+        binding.inputXrayPort.setText(profile.xrayPort.toString())
+        binding.inputXrayUuid.setText(profile.xrayUuid)
+        binding.inputXrayPassword.setText(profile.xrayPassword)
+        binding.inputXrayNetwork.setText(profile.xrayNetwork, false)
+        binding.inputXraySecurity.setText(profile.xraySecurity, false)
+        binding.inputXrayHost.setText(profile.xrayHost)
+        binding.inputXrayPath.setText(profile.xrayPath)
+        binding.inputXrayServerName.setText(profile.xrayServerName)
+        binding.switchXrayAllowInsecure.isChecked = profile.xrayAllowInsecure
+        configureConnectionEditor(profile.connectionType)
+        installXrayAdapters()
+
         installTlsVersionAdapter()
         updateConditionalVisibility()
+    }
+
+    private fun configureConnectionEditor(type: String) {
+        val xray = type.equals("XRAY", true)
+        binding.groupXrayEditor.isVisible = xray
+        // The original editor sections are all direct children of editorSections.
+        for (index in 0 until binding.editorSections.childCount) {
+            val child = binding.editorSections.getChildAt(index)
+            if (child.id != R.id.groupXrayEditor) child.isVisible = !xray
+        }
+    }
+
+    private fun installXrayAdapters() {
+        fun adapter(values: List<String>) =
+            ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, values)
+        binding.inputXrayProtocol.setAdapter(adapter(listOf("VMess", "VLESS", "Trojan")))
+        binding.inputXrayNetwork.setAdapter(adapter(listOf("ws", "tcp")))
+        binding.inputXraySecurity.setAdapter(adapter(listOf("tls", "none")))
     }
 
     private fun installTlsVersionAdapter() {
@@ -243,14 +276,21 @@ class ProfileEditorFragment : Fragment() {
                 binding.inputKeepAlive,
                 binding.inputSendBufferSize,
                 binding.inputReceiveBufferSize,
-                binding.inputMaxReconnect
+                binding.inputMaxReconnect,
+                binding.inputXrayName,
+                binding.inputXrayServer,
+                binding.inputXrayPort,
+                binding.inputXrayUuid,
+                binding.inputXrayPassword,
+                binding.inputXrayHost,
+                binding.inputXrayPath,
+                binding.inputXrayServerName
             )
 
         textFields.forEach { field ->
             field.doAfterTextChanged {
-                if (field === binding.inputName) {
-                    binding.textDialogProfileName.text =
-                        it?.toString().orEmpty()
+                if (field === binding.inputName || field === binding.inputXrayName) {
+                    binding.textDialogProfileName.text = it?.toString().orEmpty()
                 }
 
                 scheduleAutosave()
@@ -261,6 +301,11 @@ class ProfileEditorFragment : Fragment() {
             .setOnItemClickListener { _, _, _, _ ->
                 saveIfReady()
             }
+        listOf(binding.inputXrayProtocol, binding.inputXrayNetwork, binding.inputXraySecurity)
+            .forEach { field ->
+                field.setOnItemClickListener { _, _, _, _ -> saveIfReady() }
+            }
+        binding.switchXrayAllowInsecure.setOnCheckedChangeListener { _, _ -> saveIfReady() }
 
         binding.switchProxy
             .setOnCheckedChangeListener { _, _ ->
@@ -373,10 +418,11 @@ class ProfileEditorFragment : Fragment() {
         val profile =
             SshProfile(
                 name =
-                    binding.inputName
-                        .text
-                        ?.toString()
-                        .orEmpty(),
+                    if ((previous?.connectionType ?: "SSH") == "XRAY") {
+                        binding.inputXrayName.text?.toString().orEmpty()
+                    } else {
+                        binding.inputName.text?.toString().orEmpty()
+                    },
 
                 sshHost =
                     binding.inputSshHost
@@ -492,7 +538,20 @@ class ProfileEditorFragment : Fragment() {
                         .text
                         ?.toString()
                         ?.toIntOrNull()
-                        ?: defaults.maxReconnect
+                        ?: defaults.maxReconnect,
+
+                connectionType = previous?.connectionType ?: "SSH",
+                xrayProtocol = binding.inputXrayProtocol.text?.toString()?.ifBlank { "VMess" } ?: "VMess",
+                xrayServer = binding.inputXrayServer.text?.toString().orEmpty(),
+                xrayPort = binding.inputXrayPort.text?.toString()?.toIntOrNull() ?: 443,
+                xrayUuid = binding.inputXrayUuid.text?.toString().orEmpty(),
+                xrayPassword = binding.inputXrayPassword.text?.toString().orEmpty(),
+                xraySecurity = binding.inputXraySecurity.text?.toString()?.ifBlank { "tls" } ?: "tls",
+                xrayNetwork = binding.inputXrayNetwork.text?.toString()?.ifBlank { "ws" } ?: "ws",
+                xrayHost = binding.inputXrayHost.text?.toString().orEmpty(),
+                xrayPath = binding.inputXrayPath.text?.toString()?.ifBlank { "/" } ?: "/",
+                xrayServerName = binding.inputXrayServerName.text?.toString().orEmpty(),
+                xrayAllowInsecure = binding.switchXrayAllowInsecure.isChecked
             )
 
         runtime.profiles.save(
@@ -522,7 +581,10 @@ class ProfileEditorFragment : Fragment() {
                 profile.proxyHost.isBlank() &&
                 profile.proxyPort == 0 &&
                 !profile.tlsEnabled &&
-                profile.sni.isBlank()
+                profile.sni.isBlank() &&
+                profile.xrayServer.isBlank() &&
+                profile.xrayUuid.isBlank() &&
+                profile.xrayPassword.isBlank()
 
         if (isEmpty) {
             runtime.profiles.delete(

@@ -186,7 +186,7 @@
     <string name="profile_unnamed">Unnamed profile</string>
     <string name="about_title">About</string>
     <string name="about_summary">Application information</string>
-    <string name="about_app_description">VPN Protocol provides an SSH-based Android VPN tunnel with configurable transport, payload, proxy and TLS/SNI support.</string>
+    <string name="about_app_description">VPN Protocol provides SSH and Xray-Core Android VPN tunnels with configurable transport, payload, proxy, TLS/SNI and Onering support.</string>
     <string name="settings_about">About</string>
     <string name="settings_about_description">Application information and version</string>
     <string name="profiles_search_hint">Search profiles</string>

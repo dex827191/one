@@ -1,0 +1,76 @@
+name: Android Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: APK build type
+        required: true
+        type: choice
+        options:
+          - debug
+          - release
+        default: debug
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ inputs.build_type || 'debug' }} APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify bundled Xray AAR
+        shell: bash
+        run: |
+          test -s app/libs/libv2ray.aar
+          unzip -l app/libs/libv2ray.aar
+          unzip -p app/libs/libv2ray.aar classes.jar > "$RUNNER_TEMP/libv2ray-classes.jar"
+          javap -classpath "$RUNNER_TEMP/libv2ray-classes.jar" -public libv2ray.CoreController
+          javap -classpath "$RUNNER_TEMP/libv2ray-classes.jar" -public libv2ray.Libv2ray
+
+      - name: Build APK
+        shell: bash
+        run: |
+          chmod +x ./gradlew
+          BUILD_TYPE="${{ inputs.build_type || 'debug' }}"
+          if [[ "$BUILD_TYPE" == "release" ]]; then
+            ./gradlew --no-daemon --stacktrace assembleRelease
+          else
+            ./gradlew --no-daemon --stacktrace assembleDebug
+          fi
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssh-protocol-${{ inputs.build_type || 'debug' }}-apk
+          path: app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 14

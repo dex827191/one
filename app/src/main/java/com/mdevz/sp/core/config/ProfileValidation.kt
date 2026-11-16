@@ -18,34 +18,46 @@ object ProfileValidation {
             errors += ValidationError("name", "Profile name is required")
         }
 
-        if (profile.connectionType.equals("XRAY", ignoreCase = true)) {
-            if (profile.xrayProtocol !in setOf("vmess", "vless", "trojan", "shadowsocks", "socks", "http", "json")) {
-                errors += ValidationError("xrayProtocol", "Unsupported Xray protocol")
-            }
-            if (profile.xrayProtocol != "json" && profile.xrayAddress.isBlank()) {
-                errors += ValidationError("xrayAddress", "Xray server address is required")
-            }
-            if (profile.xrayPort !in 1..65535) {
-                errors += ValidationError("xrayPort", "Xray port must be 1..65535")
-            }
-            if (profile.xrayProtocol in setOf("vmess", "vless") && profile.xrayUuid.isBlank()) {
-                errors += ValidationError("xrayUuid", "UUID is required")
-            }
-            if (profile.xrayProtocol in setOf("trojan", "shadowsocks") && profile.xrayPassword.isBlank()) {
-                errors += ValidationError("xrayPassword", "Password is required")
-            }
-            if (profile.xrayProtocol == "json" && profile.xrayRawJson.isBlank()) {
-                errors += ValidationError("xrayRawJson", "Xray JSON is required")
-            }
-            if (profile.oneringEnabled && (profile.oneringOriginDomain.isBlank() || profile.oneringBugDomain.isBlank())) {
-                errors += ValidationError("onering", "Onering requires both origin domain and bug domain")
+        if (profile.connectionType.equals("XRAY", true)) {
+            if (profile.xrayServer.isBlank()) errors += ValidationError("xrayServer", "Xray server is required")
+            if (profile.xrayPort !in 1..65535) errors += ValidationError("xrayPort", "Xray port must be 1..65535")
+            val protocol = profile.xrayProtocol.lowercase()
+            if (protocol !in setOf("vmess", "vless", "trojan")) errors += ValidationError("xrayProtocol", "Choose VMess, VLESS or Trojan")
+            if (protocol != "trojan" && profile.xrayUuid.isBlank()) errors += ValidationError("xrayUuid", "UUID is required")
+            if (protocol == "trojan" && profile.xrayPassword.isBlank()) errors += ValidationError("xrayPassword", "Trojan password is required")
+            if (profile.xrayNetwork.lowercase() !in setOf("ws", "tcp")) errors += ValidationError("xrayNetwork", "Network must be WS or TCP")
+            if (profile.xraySecurity.lowercase() !in setOf("tls", "none")) errors += ValidationError("xraySecurity", "Security must be TLS or none")
+            if (profile.localSocksPort !in 1..65535) errors += ValidationError("localSocksPort", "SOCKS port must be 1..65535")
+            val serverName = profile.xrayServerName.trim()
+            if (serverName.startsWith("onering:", true)) {
+                val parts = serverName.split(':')
+                if (parts.size != 3 || parts.any { it.isBlank() }) {
+                    errors += ValidationError("xrayServerName", "Onering format must be onering:yourdomain:bugdomain")
+                }
+                if (!profile.xraySecurity.equals("tls", true)) {
+                    errors += ValidationError("xraySecurity", "Onering requires TLS security")
+                }
             }
             return errors
-        } else {
-            if (profile.sshHost.isBlank()) errors += ValidationError("sshHost", "SSH host is required")
-            if (profile.sshPort !in 1..65535) errors += ValidationError("sshPort", "SSH port must be 1..65535")
-            if (profile.username.isBlank()) errors += ValidationError("username", "SSH username is required")
-            if (profile.password.isEmpty()) errors += ValidationError("password", "Password is required for password authentication")
+        }
+
+        if (profile.sshHost.isBlank()) {
+            errors += ValidationError("sshHost", "SSH host is required")
+        }
+
+        if (profile.sshPort !in 1..65535) {
+            errors += ValidationError("sshPort", "SSH port must be 1..65535")
+        }
+
+        if (profile.username.isBlank()) {
+            errors += ValidationError("username", "SSH username is required")
+        }
+
+        if (profile.password.isEmpty()) {
+            errors += ValidationError(
+                "password",
+                "Password is required for password authentication"
+            )
         }
 
         if (profile.connectTimeoutMillis <= 0) {

@@ -58,6 +58,7 @@
         android:overScrollMode="ifContentScrolls">
 
         <LinearLayout
+            android:id="@+id/editorSections"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -693,6 +694,127 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/groupXrayEditor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:cardBackgroundColor="?attr/colorSurfaceContainerLow"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="0dp"
+                app:strokeColor="?attr/colorOutlineVariant"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Xray-Core profile"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textStyle="bold" />
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp" android:hint="Profile name">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/inputXrayName" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:singleLine="true"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:hint="Protocol (VMess / VLESS / Trojan)">
+                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                            android:id="@+id/inputXrayProtocol" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:inputType="none"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:hint="Server / Address">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/inputXrayServer" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:inputType="textUri"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:hint="Port">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/inputXrayPort" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:inputType="number"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:hint="UUID (VMess / VLESS)">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/inputXrayUuid" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:inputType="text"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:hint="Password (Trojan)">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/inputXrayPassword" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:inputType="textPassword"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:hint="Network">
+                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                            android:id="@+id/inputXrayNetwork" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:inputType="none"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:hint="Security">
+                        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+                            android:id="@+id/inputXraySecurity" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:inputType="none"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:hint="WebSocket Host">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/inputXrayHost" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:inputType="textUri"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:hint="WebSocket Path">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/inputXrayPath" android:layout_width="match_parent"
+                            android:layout_height="wrap_content" android:text="/"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:hint="SNI / ServerName / Onering">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/inputXrayServerName" android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="onering:yourdomain:bugdomain"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchXrayAllowInsecure"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:text="Allow insecure TLS (not recommended)"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 

@@ -11,7 +11,7 @@ object ProfileUriCodec {
         "sp"
 
     private const val VERSION =
-        3
+        2
 
     private const val PREFIX =
         "sp://"
@@ -46,26 +46,10 @@ object ProfileUriCodec {
                     "v",
                     VERSION
                 )
-                .put("name", profile.name)
-                .put("connectionType", profile.connectionType)
-                .put("xrayProtocol", profile.xrayProtocol)
-                .put("xrayAddress", profile.xrayAddress)
-                .put("xrayPort", profile.xrayPort)
-                .put("xrayUuid", profile.xrayUuid)
-                .put("xrayAlterId", profile.xrayAlterId)
-                .put("xraySecurity", profile.xraySecurity)
-                .put("xrayNetwork", profile.xrayNetwork)
-                .put("xrayPath", profile.xrayPath)
-                .put("xrayHost", profile.xrayHost)
-                .put("xrayTls", profile.xrayTls)
-                .put("xraySni", profile.xraySni)
-                .put("xrayFlow", profile.xrayFlow)
-                .put("xrayPassword", profile.xrayPassword)
-                .put("xrayMethod", profile.xrayMethod)
-                .put("xrayRawJson", profile.xrayRawJson)
-                .put("oneringEnabled", profile.oneringEnabled)
-                .put("oneringOriginDomain", profile.oneringOriginDomain)
-                .put("oneringBugDomain", profile.oneringBugDomain)
+                .put(
+                    "name",
+                    profile.name
+                )
                 .put(
                     "sshHost",
                     profile.sshHost
@@ -158,6 +142,18 @@ object ProfileUriCodec {
                     "maxReconnect",
                     profile.maxReconnect
                 )
+                .put("connectionType", profile.connectionType)
+                .put("xrayProtocol", profile.xrayProtocol)
+                .put("xrayServer", profile.xrayServer)
+                .put("xrayPort", profile.xrayPort)
+                .put("xrayUuid", profile.xrayUuid)
+                .put("xrayPassword", profile.xrayPassword)
+                .put("xraySecurity", profile.xraySecurity)
+                .put("xrayNetwork", profile.xrayNetwork)
+                .put("xrayHost", profile.xrayHost)
+                .put("xrayPath", profile.xrayPath)
+                .put("xrayServerName", profile.xrayServerName)
+                .put("xrayAllowInsecure", profile.xrayAllowInsecure)
 
         val data =
             json.toString()
@@ -188,8 +184,8 @@ object ProfileUriCodec {
     fun decode(
         value: String
     ): SshProfile {
-        val trimmed = value.trim()
-        if (!trimmed.startsWith(PREFIX)) return XrayProfileUriCodec.decode(trimmed)
+        val trimmed =
+            value.trim()
 
         require(
             trimmed.length <=
@@ -307,26 +303,10 @@ object ProfileUriCodec {
         val profile =
             try {
                 SshProfile(
-                    name = json.getString("name"),
-                    connectionType = json.optString("connectionType", "SSH"),
-                    xrayProtocol = json.optString("xrayProtocol", "vmess"),
-                    xrayAddress = json.optString("xrayAddress", ""),
-                    xrayPort = json.optInt("xrayPort", 443),
-                    xrayUuid = json.optString("xrayUuid", ""),
-                    xrayAlterId = json.optInt("xrayAlterId", 0),
-                    xraySecurity = json.optString("xraySecurity", "auto"),
-                    xrayNetwork = json.optString("xrayNetwork", "ws"),
-                    xrayPath = json.optString("xrayPath", "/"),
-                    xrayHost = json.optString("xrayHost", ""),
-                    xrayTls = json.optBoolean("xrayTls", true),
-                    xraySni = json.optString("xraySni", ""),
-                    xrayFlow = json.optString("xrayFlow", ""),
-                    xrayPassword = json.optString("xrayPassword", ""),
-                    xrayMethod = json.optString("xrayMethod", "aes-128-gcm"),
-                    xrayRawJson = json.optString("xrayRawJson", ""),
-                    oneringEnabled = json.optBoolean("oneringEnabled", false),
-                    oneringOriginDomain = json.optString("oneringOriginDomain", ""),
-                    oneringBugDomain = json.optString("oneringBugDomain", ""),
+                    name =
+                        json.getString(
+                            "name"
+                        ),
                     sshHost =
                         json.getString(
                             "sshHost"
@@ -418,7 +398,19 @@ object ProfileUriCodec {
                     maxReconnect =
                         json.getInt(
                             "maxReconnect"
-                        )
+                        ),
+                    connectionType = json.optString("connectionType", "SSH"),
+                    xrayProtocol = json.optString("xrayProtocol", "VMess"),
+                    xrayServer = json.optString("xrayServer", ""),
+                    xrayPort = json.optInt("xrayPort", 443),
+                    xrayUuid = json.optString("xrayUuid", ""),
+                    xrayPassword = json.optString("xrayPassword", ""),
+                    xraySecurity = json.optString("xraySecurity", "tls"),
+                    xrayNetwork = json.optString("xrayNetwork", "ws"),
+                    xrayHost = json.optString("xrayHost", ""),
+                    xrayPath = json.optString("xrayPath", "/"),
+                    xrayServerName = json.optString("xrayServerName", ""),
+                    xrayAllowInsecure = json.optBoolean("xrayAllowInsecure", false)
                 )
             } catch (
                 failure: Throwable
@@ -450,24 +442,41 @@ object ProfileUriCodec {
     fun isProfileUri(
         value: String?
     ): Boolean {
-        if (value.isNullOrBlank()) return false
-        val trimmed = value.trim()
-        if (trimmed.length > PREFIX.length + MAX_ENCODED_LENGTH) return false
-
-        // Xray JSON exports are imported as text files as well as share links.
-        if (trimmed.startsWith("{")) {
-            return runCatching { XrayProfileUriCodec.decode(trimmed) }.isSuccess
+        if (
+            value.isNullOrBlank()
+        ) {
+            return false
         }
 
-        if (trimmed.startsWith(PREFIX)) {
-            val uri = runCatching { Uri.parse(trimmed) }.getOrNull() ?: return false
-            val encoded = uri.encodedAuthority ?: return false
-            return uri.scheme == SCHEME && encoded.isNotBlank() &&
-                encoded.length <= MAX_ENCODED_LENGTH && uri.path.isNullOrEmpty() &&
-                uri.query == null && uri.fragment == null
+        val trimmed =
+            value.trim()
+
+        if (
+            trimmed.length >
+                PREFIX.length +
+                    MAX_ENCODED_LENGTH
+        ) {
+            return false
         }
 
-        // Standard V2Ray/Xray share links (VMess, VLESS, Trojan, SS, SOCKS, HTTP).
-        return runCatching { XrayProfileUriCodec.decode(trimmed) }.isSuccess
+        val uri =
+            runCatching {
+                Uri.parse(
+                    trimmed
+                )
+            }.getOrNull()
+                ?: return false
+
+        val encoded =
+            uri.encodedAuthority
+                ?: return false
+
+        return uri.scheme == SCHEME &&
+            encoded.isNotBlank() &&
+            encoded.length <=
+                MAX_ENCODED_LENGTH &&
+            uri.path.isNullOrEmpty() &&
+            uri.query == null &&
+            uri.fragment == null
     }
 }

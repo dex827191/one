@@ -413,11 +413,9 @@ class ProfilesFragment : Fragment() {
                         .contains(
                             normalizedQuery
                         ) ||
-                        entry.profile.sshHost
+                        (if (entry.profile.connectionType == "XRAY") entry.profile.xrayServer else entry.profile.sshHost)
                             .lowercase()
-                            .contains(
-                                normalizedQuery
-                            )
+                            .contains(normalizedQuery)
                 }
             }
 
@@ -467,21 +465,25 @@ class ProfilesFragment : Fragment() {
     }
 
     private fun createProfile() {
-        val id =
-            UUID.randomUUID()
-                .toString()
-
-        runtime.profiles.save(
-            id,
-            SshProfile(
-                name = "",
-                sshHost = "",
-                username = "",
-                password = ""
-            )
-        )
-
-        openEditor(id)
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Choose connection type")
+            .setItems(arrayOf("SSH", "Xray-Core")) { _, which ->
+                val type = if (which == 1) "XRAY" else "SSH"
+                val id = UUID.randomUUID().toString()
+                runtime.profiles.save(
+                    id,
+                    SshProfile(
+                        name = "",
+                        sshHost = "",
+                        username = "",
+                        password = "",
+                        connectionType = type
+                    )
+                )
+                openEditor(id)
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .show()
     }
 
     private fun openEditor(
@@ -1020,13 +1022,13 @@ class ProfilesFragment : Fragment() {
                         }
 
                 binding.textProfileHost.text =
-                    entry.profile.sshHost
-                        .ifBlank {
-                            itemView.context
-                                .getString(
-                                    R.string.ssh_host_not_set
-                                )
+                    if (entry.profile.connectionType == "XRAY") {
+                        "${entry.profile.xrayProtocol} • ${entry.profile.xrayServer.ifBlank { "Server not set" }}"
+                    } else {
+                        entry.profile.sshHost.ifBlank {
+                            itemView.context.getString(R.string.ssh_host_not_set)
                         }
+                    }
 
                 binding.textProfileActive
                     .isVisible =
@@ -1065,13 +1067,13 @@ class ProfilesFragment : Fragment() {
                         }
 
                 binding.textProfileHost.text =
-                    entry.profile.sshHost
-                        .ifBlank {
-                            itemView.context
-                                .getString(
-                                    R.string.ssh_host_not_set
-                                )
+                    if (entry.profile.connectionType == "XRAY") {
+                        "${entry.profile.xrayProtocol} • ${entry.profile.xrayServer.ifBlank { "Server not set" }}"
+                    } else {
+                        entry.profile.sshHost.ifBlank {
+                            itemView.context.getString(R.string.ssh_host_not_set)
                         }
+                    }
 
                 binding.textProfileActive
                     .isVisible =
