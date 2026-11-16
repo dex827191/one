@@ -27,6 +27,9 @@ jobs:
   build:
     name: Build ${{ inputs.build_type || 'debug' }} APK
     runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -37,12 +40,24 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK packages
+      # Use the Android SDK already provisioned on the GitHub-hosted runner.
+      # This avoids setup-android attempting to install the obsolete "tools" package.
+      - name: Configure Android SDK
+        shell: bash
         run: |
-          sdkmanager --install "platforms;android-36" "build-tools;36.0.0" "platform-tools"
+          set -euo pipefail
+          test -d "$ANDROID_HOME"
+          SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager 2>/dev/null | sort -V | tail -n 1)"
+          if [[ -z "$SDKMANAGER" ]]; then
+            echo "sdkmanager was not found under $ANDROID_HOME/cmdline-tools" >&2
+            find "$ANDROID_HOME" -maxdepth 4 -type f -name sdkmanager -print || true
+            exit 1
+          fi
+          echo "$(dirname "$SDKMANAGER")" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" --install "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          "$SDKMANAGER" --list_installed
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -50,8 +65,9 @@ jobs:
       - name: Verify bundled Xray AAR
         shell: bash
         run: |
+          set -euo pipefail
           test -s app/libs/libv2ray.aar
-          unzip -l app/libs/libv2ray.aar
+          unzip -t app/libs/libv2ray.aar
           unzip -p app/libs/libv2ray.aar classes.jar > "$RUNNER_TEMP/libv2ray-classes.jar"
           javap -classpath "$RUNNER_TEMP/libv2ray-classes.jar" -public libv2ray.CoreController
           javap -classpath "$RUNNER_TEMP/libv2ray-classes.jar" -public libv2ray.Libv2ray
@@ -59,6 +75,7 @@ jobs:
       - name: Build APK
         shell: bash
         run: |
+          set -euo pipefail
           chmod +x ./gradlew
           BUILD_TYPE="${{ inputs.build_type || 'debug' }}"
           if [[ "$BUILD_TYPE" == "release" ]]; then
