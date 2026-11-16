@@ -46,6 +46,7 @@ object XrayConfigBuilder {
                 put("tlsSettings", JSONObject().apply {
                     put("serverName", profile.xrayServerName.ifBlank { profile.xrayHost.ifBlank { profile.xrayServer } })
                     put("allowInsecure", profile.xrayAllowInsecure)
+                    if (profile.xrayFingerprint.isNotBlank()) put("fingerprint", profile.xrayFingerprint)
                 })
             }
         }

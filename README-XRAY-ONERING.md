@@ -63,3 +63,13 @@ The repository includes `.github/workflows/android-build.yml`.
 
 Pushes to `main` or `master` also run a debug build automatically.
 The workflow verifies the bundled `app/libs/libv2ray.aar` API before compiling.
+
+
+## VLESS / VMess import and routing
+
+The app accepts `vless://` and `vmess://` share links through Android VIEW intents
+and shared text. Imported profiles are stored with `connectionType=XRAY`.
+When such a profile is active, TunnelEngine starts Xray-Core and routes the VPN
+SOCKS inbound to Xray; the SSH transport, SSH authentication and SSH payload
+pipeline are not started. VLESS/VMess WebSocket path, Host, TLS, SNI/Onering and
+TLS fingerprint are parsed from the share link.

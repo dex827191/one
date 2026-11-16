@@ -15,6 +15,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.mdevz.sp.R
 import com.mdevz.sp.core.config.ProfileValidation
 import com.mdevz.sp.core.config.ProfileUriCodec
+import com.mdevz.sp.core.config.XrayShareLinkCodec
 import com.mdevz.sp.core.model.PayloadMode
 import com.mdevz.sp.core.model.SshProfile
 import com.mdevz.sp.core.model.TrafficStats
@@ -487,7 +488,11 @@ class HomeController(
                                         id
                                     },
                                 sshHost =
-                                    profile.sshHost
+                                    if (profile.connectionType.equals("XRAY", true)) {
+                                        "${profile.xrayProtocol.uppercase()} • ${profile.xrayServer}:${profile.xrayPort}"
+                                    } else {
+                                        profile.sshHost
+                                    }
                             )
                         }
                 } catch (failure: Throwable) {
@@ -894,9 +899,11 @@ class HomeController(
 
         val profile =
             try {
-                ProfileUriCodec.decode(
-                    value
-                )
+                if (XrayShareLinkCodec.isXrayUri(value)) {
+                    XrayShareLinkCodec.decode(value)
+                } else {
+                    ProfileUriCodec.decode(value)
+                }
             } catch (
                 failure: Throwable
             ) {

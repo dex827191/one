@@ -3,6 +3,9 @@ package com.mdevz.sp.ui.home
 import android.content.Context
 import android.view.LayoutInflater
 import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.text.InputType
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
@@ -21,6 +24,11 @@ class ProfileConfigurationController(
         profileId: String,
         profile: SshProfile
     ) {
+        if (profile.connectionType.equals("XRAY", true)) {
+            showXrayEditor(profileId, profile)
+            return
+        }
+
         val dialogBinding =
             DialogProfileConfigurationBinding.inflate(
                 LayoutInflater.from(context)
@@ -301,6 +309,85 @@ class ProfileConfigurationController(
                 }
         }
 
+        dialog.show()
+    }
+
+    private fun showXrayEditor(profileId: String, profile: SshProfile) {
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(24, 12, 24, 8)
+        }
+        fun field(label: String, value: String, numeric: Boolean = false): EditText {
+            val edit = EditText(context).apply {
+                hint = label
+                setSingleLine(true)
+                setText(value)
+                if (numeric) inputType = InputType.TYPE_CLASS_NUMBER
+            }
+            container.addView(edit, LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ))
+            return edit
+        }
+        val name = field("Nama profil", profile.name)
+        val protocol = field("Protocol (VLESS / VMess / Trojan)", profile.xrayProtocol)
+        val server = field("Server", profile.xrayServer)
+        val port = field("Port", profile.xrayPort.toString(), true)
+        val uuid = field("UUID", profile.xrayUuid)
+        val password = field("Password (Trojan)", profile.xrayPassword)
+        val security = field("Security (tls / none)", profile.xraySecurity)
+        val network = field("Network (ws / tcp)", profile.xrayNetwork)
+        val host = field("WebSocket Host", profile.xrayHost)
+        val path = field("WebSocket Path", profile.xrayPath)
+        val sni = field("SNI / Onering", profile.xrayServerName)
+        val fingerprint = field("TLS fingerprint (chrome)", profile.xrayFingerprint)
+
+        val dialog = AlertDialog.Builder(context)
+            .setTitle("Edit Xray Profile")
+            .setView(android.widget.ScrollView(context).apply { addView(container) })
+            .setNegativeButton(context.getString(R.string.action_cancel), null)
+            .setPositiveButton("Simpan", null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val updated = profile.copy(
+                    name = name.text.toString().trim(),
+                    xrayProtocol = protocol.text.toString().trim(),
+                    xrayServer = server.text.toString().trim(),
+                    xrayPort = port.text.toString().toIntOrNull() ?: 0,
+                    xrayUuid = uuid.text.toString().trim(),
+                    xrayPassword = password.text.toString(),
+                    xraySecurity = security.text.toString().trim().lowercase(),
+                    xrayNetwork = network.text.toString().trim().lowercase(),
+                    xrayHost = host.text.toString().trim(),
+                    xrayPath = path.text.toString().trim().ifBlank { "/" },
+                    xrayServerName = sni.text.toString().trim(),
+                    xrayFingerprint = fingerprint.text.toString().trim()
+                )
+                val errors = ProfileValidation.validate(updated)
+                if (errors.isNotEmpty()) {
+                    AlertDialog.Builder(context)
+                        .setTitle(context.getString(R.string.invalid_profile))
+                        .setMessage(errors.joinToString("\n") { "${it.field}: ${it.message}" })
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                    return@setOnClickListener
+                }
+                try {
+                    profiles.save(profileId, updated)
+                    onProfileSaved(profileId)
+                    Toast.makeText(context, context.getString(R.string.profile_saved), Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                } catch (failure: Throwable) {
+                    AlertDialog.Builder(context)
+                        .setTitle(context.getString(R.string.unable_save_profile))
+                        .setMessage(failure.message ?: failure::class.java.simpleName)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show()
+                }
+            }
+        }
         dialog.show()
     }
 

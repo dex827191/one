@@ -545,17 +545,17 @@ class TunnelEngine(
                 }
 
             val tunnelType =
-                buildString {
-                    append("SSH")
-
-                    if (snapshot.tlsEnabled) {
-                        append(" + TLS")
-                    }
-
-                    if (snapshot.payloadEnabled) {
-                        append(" + ")
-                        append(payloadLabel)
-                        append(" Payload")
+                if (snapshot.connectionType.equals("XRAY", true)) {
+                    "Xray-Core (${snapshot.xrayProtocol.uppercase()}, ${snapshot.xrayNetwork.uppercase()}, ${snapshot.xraySecurity.uppercase()})"
+                } else {
+                    buildString {
+                        append("SSH")
+                        if (snapshot.tlsEnabled) append(" + TLS")
+                        if (snapshot.payloadEnabled) {
+                            append(" + ")
+                            append(payloadLabel)
+                            append(" Payload")
+                        }
                     }
                 }
 
@@ -606,7 +606,7 @@ class TunnelEngine(
 
             if (snapshot.connectionType.equals("XRAY", true)) {
                 setState(TunnelState.CONNECTING_TCP)
-                logger.info("Starting Xray-Core (${snapshot.xrayProtocol})")
+                logger.info("Starting Xray-Core (${snapshot.xrayProtocol.uppercase()}) - SSH transport is disabled for this profile")
                 val xrayProfile = com.mdevz.sp.core.model.SshProfile(
                     name = "Xray",
                     sshHost = "",
@@ -624,6 +624,7 @@ class TunnelEngine(
                     xrayHost = snapshot.xrayHost,
                     xrayPath = snapshot.xrayPath,
                     xrayServerName = snapshot.xrayServerName,
+                    xrayFingerprint = snapshot.xrayFingerprint,
                     xrayAllowInsecure = snapshot.xrayAllowInsecure
                 )
                 xrayRunner.start(xrayProfile)

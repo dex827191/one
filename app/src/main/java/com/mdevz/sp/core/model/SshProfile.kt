@@ -44,5 +44,6 @@ data class SshProfile(
     val xrayHost: String = "",
     val xrayPath: String = "/",
     val xrayServerName: String = "",
+    val xrayFingerprint: String = "chrome",
     val xrayAllowInsecure: Boolean = false
 )

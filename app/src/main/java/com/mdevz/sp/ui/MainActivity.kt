@@ -394,27 +394,20 @@ class MainActivity : AppCompatActivity(), HomeFragment.Host {
     private fun acceptProfileIntent(
         intent: Intent
     ) {
-        if (intent.action != Intent.ACTION_VIEW) {
-            return
-        }
+        val value = when (intent.action) {
+            Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT)?.trim()
+            Intent.ACTION_VIEW -> {
+                val data = intent.data ?: return
+                when (data.scheme) {
+                    "content", "file" -> readExternalProfile(data)
+                    else -> intent.dataString
+                }
+            }
+            else -> return
+        } ?: return
 
-        val data =
-            intent.data
-                ?: return
-
-        val value =
-            when (data.scheme) {
-                "content",
-                "file" ->
-                    readExternalProfile(
-                        data
-                    )
-
-                else ->
-                    intent.dataString
-            } ?: return
-
-        if (!ProfileUriCodec.isProfileUri(value)) {
+        if (!ProfileUriCodec.isProfileUri(value) &&
+            !com.mdevz.sp.core.config.XrayShareLinkCodec.isXrayUri(value)) {
             return
         }
 

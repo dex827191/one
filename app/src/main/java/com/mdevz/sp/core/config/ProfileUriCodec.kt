@@ -153,6 +153,7 @@ object ProfileUriCodec {
                 .put("xrayHost", profile.xrayHost)
                 .put("xrayPath", profile.xrayPath)
                 .put("xrayServerName", profile.xrayServerName)
+                .put("xrayFingerprint", profile.xrayFingerprint)
                 .put("xrayAllowInsecure", profile.xrayAllowInsecure)
 
         val data =
@@ -410,6 +411,7 @@ object ProfileUriCodec {
                     xrayHost = json.optString("xrayHost", ""),
                     xrayPath = json.optString("xrayPath", "/"),
                     xrayServerName = json.optString("xrayServerName", ""),
+                    xrayFingerprint = json.optString("xrayFingerprint", "chrome"),
                     xrayAllowInsecure = json.optBoolean("xrayAllowInsecure", false)
                 )
             } catch (
