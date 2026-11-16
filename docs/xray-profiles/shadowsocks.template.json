@@ -1,0 +1,8 @@
+{
+  "inbounds": [{"tag":"socks-in","listen":"127.0.0.1","port":10808,"protocol":"socks","settings":{"udp":true}}],
+  "outbounds": [
+    {"tag":"proxy","protocol":"shadowsocks","settings":{"servers":[{"address":"YOUR_SERVER","port":8388,"method":"chacha20-ietf-poly1305","password":"YOUR_PASSWORD"}]}},
+    {"tag":"direct","protocol":"freedom"}
+  ],
+  "routing":{"rules":[{"type":"field","inboundTag":["socks-in"],"outboundTag":"proxy"}]}
+}

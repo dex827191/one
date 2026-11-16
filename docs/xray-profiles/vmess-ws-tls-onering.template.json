@@ -1,0 +1,49 @@
+{
+  "log": { "loglevel": "warning" },
+  "inbounds": [
+    {
+      "tag": "socks-in",
+      "listen": "127.0.0.1",
+      "port": 10808,
+      "protocol": "socks",
+      "settings": { "udp": true }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "proxy",
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "YOUR_BUG_DOMAIN",
+            "port": 443,
+            "users": [
+              { "id": "YOUR_UUID", "alterId": 0, "security": "auto" }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "wsSettings": {
+          "path": "/YOUR_WS_PATH",
+          "headers": { "Host": "YOUR_ORIGIN_DOMAIN" }
+        },
+        "tlsSettings": {
+          "serverName": "onering:YOUR_ORIGIN_DOMAIN:YOUR_BUG_DOMAIN",
+          "allowInsecure": false
+        }
+      }
+    },
+    { "tag": "direct", "protocol": "freedom" },
+    { "tag": "block", "protocol": "blackhole" }
+  ],
+  "routing": {
+    "domainStrategy": "AsIs",
+    "rules": [
+      { "type": "field", "inboundTag": ["socks-in"], "outboundTag": "proxy" }
+    ]
+  }
+}
