@@ -48,7 +48,7 @@ class XrayCoreRuntime(context: Context) {
             override fun onEmitStatus(code: Long, message: String?): Long = 0L
         })
         try {
-            instance.startLoop(configJson, 0)
+            instance.startLoop(configJson)
             check(instance.isRunning) { "Xray core did not enter running state" }
             controller = instance
         } catch (t: Throwable) {

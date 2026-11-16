@@ -29,7 +29,7 @@ object XrayProfileUriCodec {
         val onering = parseOnering(sni)
         return SshProfile(
             name = json.optString("ps", json.optString("add", "VMess")),
-            connectionType = "XRAY", xrayProtocol = "vmess",
+            connectionType = "XRAY", sshHost = "", username = "", password = "", xrayProtocol = "vmess",
             xrayAddress = json.optString("add"), xrayPort = json.optString("port", "443").toIntOrNull() ?: 443,
             xrayUuid = json.optString("id"), xrayAlterId = json.optInt("aid", 0),
             xraySecurity = json.optString("scy", "auto"), xrayNetwork = json.optString("net", "tcp"),
@@ -58,7 +58,7 @@ object XrayProfileUriCodec {
         val method = if (protocol == "ss") decodeShadowsocksUserInfo(userInfo).first else "aes-128-gcm"
         return SshProfile(
             name = uri.fragment?.let { decodePart(it) }?.takeIf { it.isNotBlank() } ?: uri.host.orEmpty(),
-            connectionType = "XRAY", xrayProtocol = protocol,
+            connectionType = "XRAY", sshHost = "", username = "", password = "", xrayProtocol = protocol,
             xrayAddress = uri.host.orEmpty(), xrayPort = uri.port.takeIf { it > 0 } ?: if (query["security"] == "tls") 443 else 80,
             xrayUuid = uuid, xrayPassword = secret,
             xrayMethod = method, xraySecurity = query["security"] ?: "auto",
@@ -86,7 +86,7 @@ object XrayProfileUriCodec {
         val onering = parseOnering(serverName)
         return SshProfile(
             name = root.optString("remarks", root.optString("name", "Imported Xray JSON")),
-            connectionType = "XRAY", xrayProtocol = protocol,
+            connectionType = "XRAY", sshHost = "", username = "", password = "", xrayProtocol = protocol,
             xrayAddress = vnext?.optString("address") ?: server?.optString("address").orEmpty(),
             xrayPort = vnext?.optInt("port", 443) ?: server?.optInt("port", 443) ?: 443,
             xrayUuid = user?.optString("id").orEmpty(), xrayPassword = user?.optString("password").orEmpty(),
